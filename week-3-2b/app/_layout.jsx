@@ -21,6 +21,8 @@ export default function RootLayout() {
       >
           <Stack.Screen name="task/[id]" options={{ headerShown: true, title: 'Task Details', headerTitleAlign: 'center' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)/profile" options={{headerShown: true, title: "Profile Page"}} />
       </Stack>
     </SafeAreaView>

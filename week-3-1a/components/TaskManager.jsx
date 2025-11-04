@@ -63,7 +63,7 @@ export default function TaskManager() {
             await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
             setTasks(updatedTasks);
             setModalVisible(false)
-            
+
         } catch (error) {
             console.log("Error deleting task:", error);
         }
@@ -75,10 +75,10 @@ export default function TaskManager() {
     );
 
     const renderHeader = () => (
-        <View style={{ flex: 1, alignItems: "center", marginBottom: 20 }}>
+        <View>
             <Text style={styles.listHeader}>Your Tasks</Text>
-            <TouchableOpacity onPress={fetchExternalAPI}>
-                <Text style={styles.fetchBtn}>Fetch External API</Text>
+            <TouchableOpacity style={styles.fetchBtn} onPress={fetchExternalAPI}>
+                <Text style={styles.fetchText}>Fetch Example Tasks (API)</Text>
             </TouchableOpacity>
         </View>
     );
@@ -138,26 +138,6 @@ export default function TaskManager() {
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 20 },
-    title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-    row: { flexDirection: "row", marginBottom: 12 },
-    input: {
-        flex: 1,
-        backgroundColor: "white",
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#ddd",
-        paddingHorizontal: 10,
-        height: 40
-    },
-    addBtn: {
-        backgroundColor: "#007AFF",
-        marginLeft: 8,
-        paddingHorizontal: 16,
-        justifyContent: "center",
-        borderRadius: 8,
-    },
-    btnText: { color: "white", fontWeight: "bold" },
     taskItem: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -168,9 +148,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
         elevation: 2,
     },
-    separator: {
-        height: 8,
-    },
+    separator: { height: 8 },
     emptyText: {
         textAlign: "center",
         marginTop: 40,
@@ -190,9 +168,15 @@ const styles = StyleSheet.create({
     },
     fetchBtn: {
         backgroundColor: "#007AFF",
+        paddingVertical: 6,
+        borderRadius: 6,
+        marginBottom: 10,
+        width: 200,
+    },
+    fetchText: {
         color: "white",
-        borderRadius: 8,
-        padding: 8,
+        textAlign: "center",
+        fontWeight: "bold",
     },
     modalOVerlay: {
         flex: 1,

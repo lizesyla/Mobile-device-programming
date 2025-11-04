@@ -108,7 +108,6 @@ export default function TaskManager() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
   taskItem: {
     flexDirection: "row",
     justifyContent: "space-between",
