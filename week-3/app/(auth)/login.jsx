@@ -1,131 +1,138 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native' 
-import React, { useState, useEffect } from 'react'
-import {router} from 'expo-router'
-import {signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider} from "firebase/auth"
-import {auth} from "../../firebase"
-import * as Google from 'expo-auth-session/providers/google'
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { router } from 'expo-router';
+import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../../firebase';
+import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 
-const login = () => {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [error, setError] = useState("")
-    const [loading, setLoading] = useState(false)
+WebBrowser.maybeCompleteAuthSession();
 
-    // Google Auth
-    const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-      clientId: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
-    });
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
 
-    useEffect(() => {
+    const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+
+
+
+const [request, response, promptAsync] = Google.useAuthRequest({
+  expoClientId: "1001291115613-3ck13ia8nmlkthalv9cfa944amk29k0g.apps.googleusercontent.com",
+  webClientId: "1001291115613-f1gvndajl0ul6ge23e5316grklu7auq8.apps.googleusercontent.com",
+  iosClientId: "1001291115613-d14erd8lpq9eg79m2r2gohhclklh96c3.apps.googleusercontent.com",
+    responseType: "id_token",
+    redirectUri,
+});
+
+  useEffect(() => {
+    const handleGoogleLogin = async () => {
       if (response?.type === "success") {
         const { id_token } = response.params;
-        const credential = GoogleAuthProvider.credential(id_token);
-        setLoading(true);
-        signInWithCredential(auth, credential)
-          .then(() => {
-            setLoading(false);
-            router.replace("/");
-          })
-          .catch((error) => {
-            setError(error.message);
-            setLoading(false);
-          });
-      }
-    }, [response]);
-
-    const validateInputs = () => {
-        if (email.trim() === "" || password.trim() === "") {
-            setError("Both inputs are required");
-            return false;
+        if (!id_token) {
+          setError("Google authentication failed: No ID token returned");
+          return;
         }
-
-        const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-        if (!emailRegex.test(email)) {
-            setError("Please enter a valid email address")
-            return false;
-        }
-
-        setError("");
-        return true;
-    }
-
-    const handleLogin = async () => {
-        if (!validateInputs()) return;
-
-        setLoading(true)
         try {
-            await signInWithEmailAndPassword(auth, email, password)
-            setLoading(false)
-            router.replace("/")
-        } catch (error) {
-            if (error.code === "auth/invalid-credential") {
-                setError("Incorrect password or email")
-            } else {
-                setError(error.message)
-            }
-
-            setLoading(false)
+          setLoadingGoogle(true);
+          const credential = GoogleAuthProvider.credential(id_token);
+          await signInWithCredential(auth, credential);
+          router.replace("/");
+        } catch (err) {
+          setError("Firebase login failed: " + err.message);
+        } finally {
+          setLoadingGoogle(false);
         }
+      } else if (response?.type === "error") {
+        setError("Google authentication error");
+      }
+    };
+    handleGoogleLogin();
+  }, [response]);
+
+  const validateInputs = () => {
+    if (!email.trim() || !password.trim()) {
+      setError("Both inputs are required");
+      return false;
     }
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleEmailLogin = async () => {
+    if (!validateInputs()) return;
+    try {
+      setLoadingEmail(true);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.replace("/");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingEmail(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Log In</Text>
+
       <TextInput
-                placeholder='Email'
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                autoCapitalize='none'
-            />
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
 
-            <TextInput
-                placeholder='Password'
-                onChangeText={setPassword}
-                style={styles.input}
-                secureTextEntry
-                value={password}
-            />
+      <TextInput
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        style={styles.input}
+        secureTextEntry
+      />
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <TouchableOpacity style={styles.btn} onPress={handleLogin} disabled={loading}>
-                <Text style={styles.btnText}>{loading ? "Logging in..." : "Log In"}</Text>
-            </TouchableOpacity>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            <TouchableOpacity onPress={() => router.push("/register")}>
-                <Text style={styles.link}>Don't have an account? Sign Up</Text>
-            </TouchableOpacity>
+        <TouchableOpacity style={styles.btn} onPress={handleEmailLogin} disabled={loadingEmail}>
+        <Text style={styles.btnText}>{loadingEmail ? "Logging in..." : "Log In"}</Text>
+        </TouchableOpacity>
 
-            {/* Google Sign-In Button */}
-            <TouchableOpacity
-              disabled={!request || loading}
-              onPress={() => promptAsync()}
-              style={[styles.btn, {backgroundColor: '#4285F4', marginTop: 15}]}
-            >
-              <Text style={styles.btnText}>{loading ? "Logging in..." : "Sign in with Google"}</Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+        disabled={!request || loadingGoogle}
+        onPress={() => promptAsync({ useProxy: true })}
+        style={[styles.btn, { backgroundColor: '#4285F4', marginTop: 15 }]}
+        >
+        <Text style={styles.btnText}>{loadingGoogle ? "Logging in..." : "Sign in with Google"}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/register")}>
+        <Text style={styles.link}>Don't have an account? Sign Up</Text>
+        </TouchableOpacity>
+
+
+      
     </View>
-  )
-}
+  );
+};
 
-export default login
+export default Login;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: "center", padding: 20 },
-    title: { fontSize: 26, fontWeight: "bold", marginBottom: 25, textAlign: "center" },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        padding: 12,
-        marginVertical: 5,
-        borderRadius: 8
-    },
-    btn: {
-        backgroundColor: "#007AFF",
-        padding: 14,
-        borderRadius: 8,
-        marginTop: 15
-    },
-    btnText: { color: "white", textAlign: "center", fontWeight: "600" },
-    link: { marginTop: 10, textAlign: "center", color: "#007AFF" },
-    error: { color: "red", marginTop: 10, textAlign: "center" }
-})
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 25, textAlign: "center" },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, marginVertical: 5, borderRadius: 8 },
+  btn: { backgroundColor: "#007AFF", padding: 14, borderRadius: 8, marginTop: 15, alignItems: "center" },
+  btnText: { color: "white", textAlign: "center", fontWeight: "600" },
+  error: { color: "red", marginTop: 10, textAlign: "center" },
+    link: { color: "#007AFF", marginTop: 20, textAlign: "center" },
+});
