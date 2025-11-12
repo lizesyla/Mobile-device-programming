@@ -8,6 +8,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "entryPoint": "expo-router/entry",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": true,
-        "bundleIdentifier": "com.lizesyla.week3"
+      "bundleIdentifier": "com.lizesyla.week3"
     },
     "android": {
       "adaptiveIcon": {
